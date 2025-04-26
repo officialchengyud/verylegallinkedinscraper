@@ -7,6 +7,20 @@ class FirestoreDatabase:
     def __init__(self):
         self.db = firestore.Client()
 
+    def get_user(self, uid) -> dict:
+        """
+        Retrieve user data from Firestore.
+        """
+        try:
+            doc = self.db.collection("users").document(uid).get()
+            if doc.exists:
+                return doc.to_dict()
+            else:
+                print(f"No user found with UID {uid}.")
+                return None
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
     def add_document(self, collection_name, document_id, data):
         """
         Add a document to a Firestore collection.
@@ -65,9 +79,9 @@ class FirestoreDatabase:
             print(f"An error occurred: {e}")
 
 # Example usage:
-# db = FirestoreDatabase()
+db = FirestoreDatabase()
 # db.add_document("users", "user1", {"name": "John Doe", "email": "john.doe@example.com"})
 # db.get_document("users", "user1")
 # db.update_document("users", "user1", {"email": "new.email@example.com"})
 # db.delete_document("users", "user1")
-# db.get_all_documents("users")
+db.get_all_documents("users")
