@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import database
 from flask import Flask
 from flask_socketio import SocketIO, emit
 
