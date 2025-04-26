@@ -5,7 +5,7 @@ from flask import Flask
 from flask_socketio import SocketIO, emit
 
 server = Flask(__name__)
-socketio = SocketIO(server)
+socketio = SocketIO(server, cors_allowed_origins="*")
 
 @socketio.on("signin")
 def sign_in(data):
@@ -35,4 +35,4 @@ def submit_feedback(data):
 
 
 if __name__ == '__main__':
-    server.run(debug=True)
+    socketio.run(server, debug=True)
