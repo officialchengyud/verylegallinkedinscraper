@@ -8,6 +8,7 @@ import Login from "./Authentication/index.tsx";
 import "./index.css";
 import { AuthProvider } from "./Context/AuthContext.tsx";
 import { initializeApp } from "firebase/app";
+import AuthLayout from "./Authentication/AuthLayout.tsx";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-KDbMQQ5LOar1qawH5uqxQMHF37Felus",
@@ -27,7 +28,9 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<App />} />
+            <Route element={<AuthLayout />}>
+              <Route path="/" element={<App />} />
+            </Route>
             <Route path="/login" element={<Login />} />
           </Routes>
         </BrowserRouter>
