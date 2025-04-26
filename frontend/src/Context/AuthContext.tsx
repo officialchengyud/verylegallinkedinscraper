@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import {
+  createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -16,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User | null>;
+  signUp: (email: string, password: string) => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,8 +50,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return credential.user;
   };
 
+  const signUp = async (
+    email: string,
+    password: string
+  ): Promise<User | null> => {
+    const auth = getAuth();
+    const credential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    setUser(credential.user);
+    return credential.user;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login }}>
+    <AuthContext.Provider value={{ user, loading, login, signUp }}>
       {children}
     </AuthContext.Provider>
   );
