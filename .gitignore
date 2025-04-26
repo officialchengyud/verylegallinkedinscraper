@@ -1,4 +1,0 @@
-node_modules
-.env
-backend/db_key.json
-__pycache__
