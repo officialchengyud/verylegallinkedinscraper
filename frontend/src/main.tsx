@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { Theme } from "@radix-ui/themes";
 import { BrowserRouter, Route, Routes } from "react-router";
 import "@radix-ui/themes/styles.css";
-import App from "./App.tsx";
 import LoginPage from "./Authentication/LoginPage.tsx";
 import "./index.css";
 import { AuthProvider } from "./Context/AuthContext.tsx";
@@ -11,6 +10,7 @@ import { initializeApp } from "firebase/app";
 import AuthLayout from "./Authentication/AuthLayout.tsx";
 import SignUpPage from "./Authentication/SignUpPage.tsx";
 import { getFirestore } from "firebase/firestore";
+import DashboardPage from "./Dashboard/DashboardPage.tsx";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-KDbMQQ5LOar1qawH5uqxQMHF37Felus",
@@ -32,7 +32,7 @@ createRoot(document.getElementById("root")!).render(
         <BrowserRouter>
           <Routes>
             <Route element={<AuthLayout />}>
-              <Route path="/" element={<App />} />
+              <Route path="/" element={<DashboardPage />} />
             </Route>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />

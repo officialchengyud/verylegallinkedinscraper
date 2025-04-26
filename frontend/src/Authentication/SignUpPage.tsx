@@ -39,7 +39,6 @@ function SignUpPage() {
   const { user, signUp } = useAuth();
 
   const onSubmit: SubmitHandler<SignUpForm> = (data) => {
-    console.log(data);
     if (data.password !== data.confirmPassword) {
       setError("Passwords do not match!");
     } else {
@@ -48,6 +47,7 @@ function SignUpPage() {
           .then(() => {
             setValue("password", "");
             setValue("confirmPassword", "");
+            setError("");
             setStage(2);
           })
           .catch((error) => {
