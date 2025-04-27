@@ -18,7 +18,7 @@ interface LoginForm {
   password: string;
 }
 
-function Login() {
+function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { register, handleSubmit } = useForm<LoginForm>();
@@ -52,8 +52,13 @@ function Login() {
         <Flex
           justify="between"
           align="center"
-          height="100px"
-          style={{ marginLeft: "80px" }}
+          position="sticky"
+          top="0"
+          style={{
+            height: "80px",
+            padding: "0px 80px",
+            zIndex: 10,
+          }}
         >
           <Box>
             <Heading size="3">VERY LEGAL LINKEDIN SCRAPER</Heading>
@@ -95,7 +100,11 @@ function Login() {
                   </Callout.Root>
                 )}
                 <Flex gap="2" align="center" justify="end">
-                  <Button size="2" variant="outline">
+                  <Button
+                    size="2"
+                    variant="outline"
+                    onClick={() => navigate("/signup")}
+                  >
                     Create Account
                   </Button>
                   <Button
@@ -111,7 +120,7 @@ function Login() {
             </Card>
           </Box>
         </Flex>
-        <Flex height="80px" justify="center">
+        <Flex height="80px" justify="center" align="center">
           <Heading size="3" color="gray">
             © VERY LEGAL LINKEDIN SCRAPER 2025
           </Heading>
@@ -121,4 +130,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default LoginPage;
