@@ -29,6 +29,20 @@ function LeftNavigation() {
           </Text>
         </Card>
       </Box>
+      <Box
+        maxWidth="350px"
+        style={{ marginLeft: -10, marginTop: 10 }}
+        onClick={() => navigate("/profile")}
+      >
+        <Card>
+          <Text as="div" size="2" weight="bold">
+            Profile
+          </Text>
+          <Text as="div" color="gray" size="2">
+            View your profile
+          </Text>
+        </Card>
+      </Box>
     </Flex>
   );
 }
