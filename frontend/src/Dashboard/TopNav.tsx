@@ -20,9 +20,10 @@ const TopNav = () => {
       top="0"
       style={{
         height: "60px",
-        padding: "0px 80px",
+        padding: "0px 80px 0px 20px",
         zIndex: 10,
         borderBottom: "1px solid #ededed",
+        background: "white",
       }}
     >
       <Box>
