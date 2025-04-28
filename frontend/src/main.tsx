@@ -32,7 +32,7 @@ createRoot(document.getElementById("root")!).render(
         <BrowserRouter>
           <Routes>
             <Route element={<AuthLayout />}>
-              <Route path="/" element={<DashboardPage />} />
+              <Route path="/*" element={<DashboardPage />} />
             </Route>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
