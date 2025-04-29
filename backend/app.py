@@ -4,21 +4,23 @@ from enum import Enum
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
-from flask_cors import CORS
+# from flask_cors import CORS
 from agno.agent import Agent
 from agno.models.google import Gemini
+from agno.models.openai import OpenAIChat
 
 # Load environment variables
 load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# CORS(app)  # Enable CORS for all routes
 
 # Initialize SocketIO with CORS support
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 class WorkflowStep(Enum):
+    START = "START"
     CONTEXT = "CONTEXT_GENERATION"
     COMPANIES = "COMPANY_SEARCH"
     CONTACTS = "CONTACT_SEARCH"
@@ -26,13 +28,15 @@ class WorkflowStep(Enum):
     DONE = "DONE"
 
 class MainAgent:
-    def __init__(self):
+    def __init__(self, basic_info):
         # Initialize Gemini model through Agno
-        agent_llm = Gemini(id='gemini-2.0-flash-exp', api_key=os.getenv('GEMINI_API_KEY'))
+        # agent_llm = Gemini(id='gemini-2.0-flash-exp', api_key=os.getenv('GEMINI_API_KEY'))
+        agent_llm = OpenAIChat(id='gpt-4o', api_key=os.getenv('OPENAI_API_KEY'))
+        
         
         # Initialize agent state
         self.current_step = WorkflowStep.CONTEXT
-        self.user_data = {}
+        self.user_data = {**basic_info, "context": ""}
         self.companies = []
         self.contacts = []
 
@@ -45,11 +49,14 @@ class MainAgent:
         self.agent = Agent(
             model=agent_llm,
             tools=[
-                self.linkedin_scraper_tool,
-                self.organize_information_tool,
-                self.send_email_tool,
+                # self.linkedin_scraper_tool,
+                # self.organize_information_tool,
+                # self.send_email_tool,
             ],
             instructions=[
+                "You are a dummy agent. You have the full functionality of the agent I will describe below. However, the tools mentioned are not implemented yet.",
+                "At every step, make up dummy data but ensure the output format is as specified in the description below."
+
                 "You are an autonomous sales outreach assistant that helps find and contact potential leads.",
                 "You have access to three tools:",
                 "1. linkedin_scraper_tool: Searches LinkedIn for companies and people",
@@ -135,6 +142,7 @@ class MainAgent:
                 "2. Never skip steps or execute multiple steps at once",
                 "3. Only use the provided state data from the current and previous steps",
                 "4. Follow the exact output format for each step",
+                "5. Make sure your output is valid JSON. It should not have ``` or newline or any other formatting.",
             ]
         )
     
@@ -155,11 +163,13 @@ class MainAgent:
     
     def handle_input(self, user_input):
         """Handle all user input for the workflow"""
-        # Update step if feedback was approved
-        if user_input.get("approved"):
-            if self.current_step == WorkflowStep.CONTEXT:
-                self.current_step = WorkflowStep.COMPANIES
-            elif self.current_step == WorkflowStep.COMPANIES:
+        # Update step
+        if self.current_step == WorkflowStep.START:
+            self.current_step = WorkflowStep.CONTEXT
+        elif self.current_step == WorkflowStep.CONTEXT:
+            self.current_step = WorkflowStep.COMPANIES
+        elif user_input.get("approved", True):
+            if self.current_step == WorkflowStep.COMPANIES:
                 self.current_step = WorkflowStep.CONTACTS
             elif self.current_step == WorkflowStep.CONTACTS:
                 self.current_step = WorkflowStep.EMAILS
@@ -196,12 +206,13 @@ class MainAgent:
                 "current_contact": self.current_contact,
                 "current_email": self.current_email,
             },
-            "user_input": user_input,
+            "user_input": user_input.get("text", ""),
         }
         
         # Run the agent with the input
-        result_json = self.agent.run(json.dumps(input_data))
-        result = json.loads(result_json)
+        run_response = self.agent.run(json.dumps(input_data)).content
+        print("Agent response:", run_response)
+        result = json.loads(run_response)
         
         step_executed = result.get("step", {})
         if step_executed != self.current_step.value:
@@ -219,29 +230,29 @@ class MainAgent:
 
         return result
 
-# Initialize global agent
-agent = MainAgent()
+# # Initialize global agent
+# agent = MainAgent()
 
-# WebSocket event handlers
-@socketio.on('connect')
-def handle_connect():
-    """Handle client connection"""
-    print('Client connected')
-    emit('connected', {'status': 'connected'})
+# # WebSocket event handlers
+# @socketio.on('connect')
+# def handle_connect():
+#     """Handle client connection"""
+#     print('Client connected')
+#     emit('connected', {'status': 'connected'})
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Handle client disconnection"""
-    print('Client disconnected')
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     """Handle client disconnection"""
+#     print('Client disconnected')
 
-@socketio.on('user_input')
-def handle_user_input(data):
-    """Start a new workflow with initial user data"""
-    try:
-        result = agent.handle_input(data)
-        emit('agent_output', result)
-    except Exception as e:
-        emit('error', {'message': str(e)})
+# @socketio.on('user_input')
+# def handle_user_input(data):
+#     """Start a new workflow with initial user data"""
+#     try:
+#         result = agent.handle_input(data)
+#         emit('agent_output', result)
+#     except Exception as e:
+#         emit('error', {'message': str(e)})
 
 if __name__ == '__main__':
     # Run the server
