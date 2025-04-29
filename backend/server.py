@@ -67,7 +67,7 @@ def submit_feedback(data: dict):
         raise ValueError(f"Feedback not found for UID {uid}.")
     
     if is_approved:
-        
+        pass
 
 @socketio.on("cleaup")
 def cleanup(data: dict):

@@ -157,7 +157,9 @@ class MainAgent:
         """Handle all user input for the workflow"""
         # Update step if feedback was approved
         if user_input.get("approved"):
-            if self.current_step == WorkflowStep.COMPANIES:
+            if self.current_step == WorkflowStep.CONTEXT:
+                self.current_step = WorkflowStep.COMPANIES
+            elif self.current_step == WorkflowStep.COMPANIES:
                 self.current_step = WorkflowStep.CONTACTS
             elif self.current_step == WorkflowStep.CONTACTS:
                 self.current_step = WorkflowStep.EMAILS
@@ -168,7 +170,7 @@ class MainAgent:
                 # Go to next contact, end if no more contacts
                 self.current_contact_index += 1
                 if self.current_contact_index >= len(self.contacts):
-                    self.current_step == WorkflowStep.DONE
+                    self.current_step = WorkflowStep.DONE
 
             # Refresh current contact and email draft
             if self.current_step == WorkflowStep.EMAILS:
@@ -205,8 +207,9 @@ class MainAgent:
         if step_executed != self.current_step.value:
             print(f"Wrong step executed: expected {self.current_step.value}, executed {step_executed}")
         else:
+            # Update state
             if self.current_step == WorkflowStep.CONTEXT:
-                self.companies = result["data"]
+                self.user_data = result["data"]
             if self.current_step == WorkflowStep.COMPANIES:
                 self.companies = result["data"]["companies"]
             elif self.current_step == WorkflowStep.CONTACTS:
