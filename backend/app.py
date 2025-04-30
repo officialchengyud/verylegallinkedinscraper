@@ -230,10 +230,7 @@ class MainAgent:
 
         return result
 
-# # Initialize global agent
-# agent = MainAgent()
-
-# # WebSocket event handlers
+# WebSocket event handlers
 # @socketio.on('connect')
 # def handle_connect():
 #     """Handle client connection"""
@@ -245,15 +242,36 @@ class MainAgent:
 #     """Handle client disconnection"""
 #     print('Client disconnected')
 
-# @socketio.on('user_input')
-# def handle_user_input(data):
-#     """Start a new workflow with initial user data"""
-#     try:
-#         result = agent.handle_input(data)
-#         emit('agent_output', result)
-#     except Exception as e:
-#         emit('error', {'message': str(e)})
+
+@socketio.on('initialize_agent')
+def initialize_agent(data: dict):
+    """
+    Initialize the agent with basic user information.
+    
+    Expects a dictionary with the 'basic_info' key
+    """
+    try:
+        basic_info = data.get('basic_info', {})
+        global agent
+        agent = MainAgent(basic_info)
+        
+        # Emit success message
+        emit('agent_initialized', {'status': 'success'})
+    except Exception as e:
+        emit('error', {'message': str(e)})
+
+@socketio.on('user_input')
+def handle_user_input(data: dict):
+    """
+    Provide user input to the agent
+
+    Expects a dictionary with the 'approved' (optional) and 'text' keys
+    """
+    try:
+        result = agent.handle_input(data)
+        emit('agent_output', result)
+    except Exception as e:
+        emit('error', {'message': str(e)})
 
 if __name__ == '__main__':
-    # Run the server
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000) 
+    socketio.run(app, debug=True, host='127.0.0.1', port=5000) 
