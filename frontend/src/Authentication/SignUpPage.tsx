@@ -13,7 +13,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { useAuth } from "../Context/AuthContext";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../main";
 
 interface SignUpForm {
@@ -59,8 +59,22 @@ function SignUpPage() {
           setDoc(doc(db, "users", user.uid), {
             ...rest,
           })
-            .then(() => {
+            .then(
+              async () =>
+                await setDoc(doc(db, "chats", user.uid), {
+                  messages: [
+                    {
+                      role: "agent",
+                      message:
+                        "Welcome to Very Legal LinkedIn Scraper! Send a message to get started.",
+                      timestamp: Timestamp.now(),
+                    },
+                  ],
+                })
+            )
+            .finally(() => {
               navigate("/");
+              window.location.reload();
             })
             .catch((error) => {
               setError(error.message);

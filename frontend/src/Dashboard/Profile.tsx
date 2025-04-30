@@ -1,4 +1,4 @@
-import { Badge, Box, DataList, Link } from "@radix-ui/themes";
+import { Badge, Box, DataList } from "@radix-ui/themes";
 import { useAuth } from "../Context/AuthContext";
 
 const Profile = () => {
