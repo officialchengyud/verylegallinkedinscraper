@@ -8,6 +8,7 @@ from flask_socketio import SocketIO, emit
 from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.models.openai import OpenAIChat
+from smolagents_test import contact_finder_tool
 
 # Load environment variables
 load_dotenv()
@@ -45,23 +46,28 @@ class MainAgent:
         self.current_contact = {}
         self.current_email = {}
         self.processed_emails = []
+
+        # Tools
+        self.contact_finder_tool = contact_finder_tool
         
         self.agent = Agent(
             model=agent_llm,
             tools=[
+                self.contact_finder_tool,
                 # self.linkedin_scraper_tool,
                 # self.organize_information_tool,
                 # self.send_email_tool,
             ],
             instructions=[
-                "You are a dummy agent. You have the full functionality of the agent I will describe below. However, the tools mentioned are not implemented yet.",
-                "At every step, make up dummy data but ensure the output format is as specified in the description below."
+                # "You are a dummy agent. You have the full functionality of the agent I will describe below. However, the tools mentioned are not implemented yet.",
+                # "At every step, make up dummy data but ensure the output format is as specified in the description below."
 
                 "You are an autonomous sales outreach assistant that helps find and contact potential leads.",
-                "You have access to three tools:",
-                "1. linkedin_scraper_tool: Searches LinkedIn for companies and people",
-                "2. organize_information_tool: Processes and structures the scraped data",
-                "3. send_email_tool: Sends personalized outreach emails",
+                "You have access to one tool:",
+                # "1. linkedin_scraper_tool: Searches LinkedIn for companies and people",
+                # "2. organize_information_tool: Processes and structures the scraped data",
+                # "3. send_email_tool: Sends personalized outreach emails",
+                "1. contact_finder_tool: Searches the internet for companies and contacts based on user input",
                 
                 "WORKFLOW OVERVIEW:",
                 "The overall workflow consists of four sequential steps. Each step must wait for user feedback before proceeding.",
@@ -100,8 +106,8 @@ class MainAgent:
                 "Step 2: Generate List of Companies (COMPANY_SEARCH)",
                 "- Use the user_data and companies list (if any) in state"
                 "- The user_input field, if present, contains the user's feedback regarding the current list of companies"
-                "- Use linkedin_scraper_tool to gather information on relevant companies",
-                "- Use organize_information_tool to structure the company data",
+                "- Use contact_finder_tool to gather information on relevant companies",
+                # "- Use organize_information_tool to structure the company data",
                 "- Using the structured data, return a list of companies to contact"
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - companies: A list of companies, each with the following fields:",
@@ -111,8 +117,8 @@ class MainAgent:
                 "Step 3: Generate Contacts from Companies (CONTACT_SEARCH)",
                 "- Use the user_data, the companies list, the contacts list (if any) in state",
                 "- The user_input field, if present, contains the user's feedback regarding the current list of contacts",
-                "- Use linkedin_scraper_tool to find contacts from the list of companies",
-                "- Use organize_information_tool to structure the contact data",
+                "- Use contact_finder_tool to find contacts from the list of companies",
+                # "- Use organize_information_tool to structure the contact data",
                 "- Using the structured data, return a list of companies to contact"
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - contacts: A list of contacts, each with the following fields:",
