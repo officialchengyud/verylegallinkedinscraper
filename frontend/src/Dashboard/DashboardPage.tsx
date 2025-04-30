@@ -1,4 +1,4 @@
-import { Flex, Text } from "@radix-ui/themes";
+import { Flex } from "@radix-ui/themes";
 import TopNav from "./TopNav";
 import LeftNavigation from "./LeftNavigation";
 import { Route, Routes } from "react-router";

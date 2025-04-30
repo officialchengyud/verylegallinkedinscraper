@@ -1,28 +1,21 @@
 import { Box, Button, Flex, TextArea, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
+import { useChat } from "../Context/ChatContext";
 
 const Chat = () => {
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi there! How can I help you today?" },
-  ]);
+  const { sendChat, chatLog } = useChat();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleSend = () => {
     if (!input.trim()) return;
-    setMessages([...messages, { role: "user", content: input }]);
+    sendChat(input);
     setInput("");
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "I'm working on it!" },
-      ]);
-    }, 1000);
   };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [chatLog]);
 
   return (
     <Flex
@@ -42,7 +35,7 @@ const Chat = () => {
           background: "#f9fafb",
         }}
       >
-        {messages.map((msg, index) => (
+        {chatLog.map((msg, index) => (
           <Box
             key={index}
             style={{
@@ -56,7 +49,7 @@ const Chat = () => {
               wordBreak: "break-word",
             }}
           >
-            <Text>{msg.content}</Text>
+            <Text>{msg.message}</Text>
           </Box>
         ))}
         <div ref={bottomRef} />

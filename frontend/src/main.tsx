@@ -11,6 +11,7 @@ import AuthLayout from "./Authentication/AuthLayout.tsx";
 import SignUpPage from "./Authentication/SignUpPage.tsx";
 import { getFirestore } from "firebase/firestore";
 import DashboardPage from "./Dashboard/DashboardPage.tsx";
+import { ChatProvider } from "./Context/ChatContext.tsx";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-KDbMQQ5LOar1qawH5uqxQMHF37Felus",
@@ -29,15 +30,17 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Theme>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AuthLayout />}>
-              <Route path="/*" element={<DashboardPage />} />
-            </Route>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
-          </Routes>
-        </BrowserRouter>
+        <ChatProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<AuthLayout />}>
+                <Route path="/*" element={<DashboardPage />} />
+              </Route>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+            </Routes>
+          </BrowserRouter>
+        </ChatProvider>
       </AuthProvider>
     </Theme>
   </StrictMode>
