@@ -30,22 +30,19 @@ class WorkflowStep(Enum):
 
 class MainAgent:
     def __init__(self, basic_info):
-        # Initialize Gemini model through Agno
-        # agent_llm = Gemini(id='gemini-2.0-flash-exp', api_key=os.getenv('GEMINI_API_KEY'))
+        # Initialize OpenAI model through Agno
         agent_llm = OpenAIChat(id='gpt-4o', api_key=os.getenv('OPENAI_API_KEY'))
         
         
         # Initialize agent state
-        self.current_step = WorkflowStep.CONTEXT
+        self.previous_step = WorkflowStep.CONTEXT.value
         self.user_data = {**basic_info, "context": ""}
         self.companies = []
         self.contacts = []
 
         # More variables to track email being drafted
-        self.current_contact_index = None
-        self.current_contact = {}
         self.current_email = {}
-        self.processed_emails = []
+        self.num_approved_emails = 0
 
         # Tools
         self.contact_finder_tool = contact_finder_tool
@@ -60,39 +57,45 @@ class MainAgent:
                 # self.send_email_tool,
             ],
             instructions=[
-                # "You are a dummy agent. You have the full functionality of the agent I will describe below. However, the tools mentioned are not implemented yet.",
-                # "At every step, make up dummy data but ensure the output format is as specified in the description below."
-
+                "OVERVIEW:",
                 "You are an autonomous sales outreach assistant that helps find and contact potential leads.",
-                "You have access to one tool:",
-                # "1. linkedin_scraper_tool: Searches LinkedIn for companies and people",
-                # "2. organize_information_tool: Processes and structures the scraped data",
-                # "3. send_email_tool: Sends personalized outreach emails",
-                "1. contact_finder_tool: Searches the internet for companies and contacts based on user input",
+                "You can perform 2 types of tasks:",
+                "1. Execute workflow steps as described in the workflow.",
+                "2. Respond conversationally to the user's queries.",
                 
+                "You have access to 1 tool:",
+                "1. contact_finder_tool: Searches the internet for companies and contacts based on user input",
+                # "company_finder_tool: Searches the internet for companies based on the user's needs",
+                # "contact_finder_tool: Searches the internet for contacts from a given list of companies for the user to reach out to",
+                
+                "Whenever you receive a user input, you will determine if the user input is requesting a workflow step to be executed, or if it is a conversational query.",
+                "If the user input is a conversational query, generate a clear and concise answer, using information about the user state passed to you.",
+                "If the user input pertains to a specific step, you will first decide which step of the workflow needs to be executed, and execute only that step."
+                "When executing a step, use the user input to generate the output data.",
+
                 "WORKFLOW OVERVIEW:",
-                "The overall workflow consists of four sequential steps. Each step must wait for user feedback before proceeding.",
+                "The workflow consists of four sequential steps. You can only move on to the next step when the user approves your output for the previous step.",
                 "You will only execute one step at a time.",
+                "You can execute the same step more than once (if you deem that the user is not satisfied with your previous output)",
+                "You should not execute earlier steps than the most recently executed one. That is, you cannot go backwards in the workflow.",
+                "The four steps are: CONTEXT_GENERATION, COMPANY_SEARCH, CONTACT_SEARCH, or EMAIL_GENERATION. More details about each step will be provided below."
                 
                 "INPUT FORMAT:",
                 "You will receive a JSON object with:",
-                "1. current_step: The step to execute (CONTEXT_GENERATION, COMPANY_SEARCH, CONTACT_SEARCH, or EMAIL_GENERATION)",
+                "1. previous_step: The previous step executed",
                 "2. state: The current state containing:",
-                "   - user_data: A dictionary containing user data from Step 1"
+                "   - user_data: A dictionary containing user data from Step 1",
                 "   - companies: List of companies generated from Step 2",
                 "   - contacts: List of contacts generated from Step 3",
-                "   - current_contact: The contact of the current email being drafted in Step 4",
                 "   - current_email: The current email being drafted in Step 4",
+                "   - num_approved_emails: The number of contacts from the contacts list that the user has approved an email for in Step 4"
                 "3. user_input: A string containing the user's most recent input",
 
-                "INITIAL ACTION:",
-                "Use the current_step value to determine which of the steps below to execute. Execute the step, using the relevant data."
-
-                "STEPS:",
+                "WORKFLOW STEPS:",
                 
                 "Step 1: Generate Context (CONTEXT_GENERATION)",
                 "- Use the user_data in state",
-                "- The user_input field contains additional context given by the user",
+                "- Look at the user_input field potentially contains additional context given by the user",
                 "- Using user_input and user_data, generate a updated user_data object",
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - first_name: The first name of the user",
@@ -103,22 +106,26 @@ class MainAgent:
                 "  - city: The city the user is based in",
                 "  - country: The country the user is based in",
                 "  - context: Any additional information about the user that is useful for lead generation and sales outreach",
+                "- Update the state object with the updated user data (state['user_data'])"
+                "- On user approval, go to the next step"
                 
                 "Step 2: Generate List of Companies (COMPANY_SEARCH)",
                 "- Use the user_data and companies list (if any) in state"
-                "- The user_input field, if present, contains the user's feedback regarding the current list of companies"
+                "- Look at the user_input field which potentially contains the user's feedback regarding the current list of companies"
                 "- Use contact_finder_tool to gather information on relevant companies",
-                "- Using the structured data, return a list of companies to contact"
+                "- Using the structured data and state['companies'], return an updated list of companies to contact"
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - companies: A list of companies, each with the following fields:",
                 "    - name: The name of the company",
                 "    - reason: The reason why the company could be a potential lead",
+                "- Update the state object with the updated companies list (state['companies'])"
+                "- On user approval, go to the next step"
                 
                 "Step 3: Generate Contacts from Companies (CONTACT_SEARCH)",
                 "- Use the user_data, the companies list, the contacts list (if any) in state",
-                "- The user_input field, if present, contains the user's feedback regarding the current list of contacts",
-                "- Use contact_finder_tool to find contacts from the list of companies",
-                "- Using the structured data, return a list of companies to contact"
+                "- Look at the user_input field which potentially contains the user's feedback regarding the current list of contacts",
+                "- Use contact_finder_tool to find contacts from the current list of companies",
+                "- Using the structured data, and state['contacts'], return a list of contacts to reach out to"
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - contacts: A list of contacts, each with the following fields:",
                 "    - name: The name of the contact",
@@ -126,29 +133,38 @@ class MainAgent:
                 "    - company: The company the contact works at",
                 "    - reason: The reason why the contact could be a potential lead",
                 "    - linkedin: The contact's LinkedIn profile URL",
+                "- Update the state object with the updated contacts list (state['contacts'])"
+                "- On user approval, go to the next step"
                 
                 "Step 4: Generate Emails (EMAIL_GENERATION)",
-                "- Use the user_data, current_contact and current_email objects in state",
-                "- The user_input field, if present, contains the user's feedback regarding the current email draft",
+                "- This step aims to draft an email for only one contact at a time"
+                "- Use the user_data, contacts, current_email and num_approved_emails fields in state."
+                "- The contacts and num_approved_emails is used for seeing which is the current contact"
+                "- Look at the user_input field which potentially contains the user's feedback regarding the current email draft",
                 "- Return an updated email to reach out to the specified contact",
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - name: The name of the contact",
-                "  - email: The email of the contact",
+                "  - email: The email address of the contact",
                 "  - company: The company the contact works at",
                 "  - subject: The subject of the email",
                 "  - body: The body of the email",
+                "- Update the state object with the latest email draft (state['current_email']) as well as the number of approved emails (state['num_approved_emails'])"
+                "- On user approval, check if the number of approved emails is still less than the number of contacts. If yes, then move on to the next contact"
+                "- If there are no more contacts, end the workflow and return an empty value for step executed"
                 
                 "OUTPUT FORMAT:",
-                "After each step, return a JSON object with:",
-                "1. step: The step that was executed (CONTEXT_GENERATION, COMPANY_SEARCH, CONTACT_SEARCH, or EMAIL_GENERATION)",
-                "2. data: The step-specific output",
+                "On each run, return a JSON object with the following fields:",
+                "1. text: The agent's conversational response to the user. Make sure to provide details of the step you executed, if any",
+                "2. step: The step that was executed, if any (CONTEXT_GENERATION, COMPANY_SEARCH, CONTACT_SEARCH, or EMAIL_GENERATION). If no step was executed, this should be None",
+                "3. data: The step-specific output, if any. If a step was not executed, this should contain an empty object",
+                "4. state: The updated state object",
                 
                 "IMPORTANT RULES:",
-                "1. Always check current_step to know which step to execute",
+                "1. Always decide which step to execute (if any) by inferring from the user's input",
                 "2. Never skip steps or execute multiple steps at once",
                 "3. Only use the provided state data from the current and previous steps",
-                "4. Follow the exact output format for each step",
-                "5. Make sure your output is valid JSON. It should not have ``` or newline or any other formatting.",
+                "4. Follow the exact output format for each step. Ensure that the state variables are updated and returned correctly",
+                "5. Make sure your output is valid JSON. It should not have ``` or newline or any other formatting",
             ]
         )
     
@@ -168,49 +184,16 @@ class MainAgent:
         return {"status": "success", "data": "Email sent"}
     
     def handle_input(self, user_input):
-        """Handle all user input for the workflow"""
-        # Update step
-        if self.current_step == WorkflowStep.START:
-            self.current_step = WorkflowStep.CONTEXT
-        elif self.current_step == WorkflowStep.CONTEXT:
-            self.current_step = WorkflowStep.COMPANIES
-        elif user_input.get("approved", True):
-            if self.current_step == WorkflowStep.COMPANIES:
-                self.current_step = WorkflowStep.CONTACTS
-            elif self.current_step == WorkflowStep.CONTACTS:
-                self.current_step = WorkflowStep.EMAILS
-                self.current_contact_index = 0
-            elif self.current_step == WorkflowStep.EMAILS:
-                # Add to list of approved emails
-                self.processed_emails.append(self.current_email)
-                # Go to next contact, end if no more contacts
-                self.current_contact_index += 1
-                if self.current_contact_index >= len(self.contacts):
-                    self.current_step = WorkflowStep.DONE
-
-            # Refresh current contact and email draft
-            if self.current_step == WorkflowStep.EMAILS:
-                self.current_contact = self.contacts[self.current_contact_index]
-                self.current_email = {
-                    "name": "",
-                    "email": "",
-                    "company": "",
-                    "subject": "",
-                    "body": "",
-                }
-
-        if self.current_step == WorkflowStep.DONE:
-            return {}
-        
+        """Handle all user input for the workflow"""        
         # Prepare input data for the agent
         input_data = {
-            "current_step": self.current_step.value,
+            "previous_step": self.previous_step,
             "state": {
                 "user_data": self.user_data,
                 "companies": self.companies,
                 "contacts": self.contacts,
-                "current_contact": self.current_contact,
                 "current_email": self.current_email,
+                "num_approved_emails": self.num_approved_emails,
             },
             "user_input": user_input.get("text", ""),
         }
@@ -220,35 +203,18 @@ class MainAgent:
         print("Agent response:", run_response)
         result = json.loads(run_response)
         
-        step_executed = result.get("step", {})
-        if step_executed != self.current_step.value:
-            print(f"Wrong step executed: expected {self.current_step.value}, executed {step_executed}")
-        else:
-            # Update state
-            if self.current_step == WorkflowStep.CONTEXT:
-                self.user_data = result["data"]
-            if self.current_step == WorkflowStep.COMPANIES:
-                self.companies = result["data"]["companies"]
-            elif self.current_step == WorkflowStep.CONTACTS:
-                self.contacts = result["data"]["contacts"]
-            elif self.current_step == WorkflowStep.EMAILS:
-                self.current_email = result["data"]
+        # Update state
+        new_state = result.pop("state")
+        self.previous_step = result.get("step", self.previous_step)
+        self.user_data = new_state["user_data"]
+        self.companies = new_state["companies"]
+        self.contacts = new_state["contacts"]
+        self.current_email = new_state["current_email"]
+        self.num_approved_emails = new_state["num_approved_emails"]
 
         return result
 
 # WebSocket event handlers
-# @socketio.on('connect')
-# def handle_connect():
-#     """Handle client connection"""
-#     print('Client connected')
-#     emit('connected', {'status': 'connected'})
-
-# @socketio.on('disconnect')
-# def handle_disconnect():
-#     """Handle client disconnection"""
-#     print('Client disconnected')
-
-
 @socketio.on('initialize_agent')
 def initialize_agent(data: dict):
     """
@@ -280,4 +246,4 @@ def handle_user_input(data: dict):
         emit('error', {'message': str(e)})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='127.0.0.1', port=5000) 
+    socketio.run(app, debug=True, host='127.0.0.1', port=5000)

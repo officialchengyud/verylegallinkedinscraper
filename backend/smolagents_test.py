@@ -21,7 +21,7 @@ def contact_finder_tool(user_query):
     with open("prompt.txt", "r", encoding="utf-8") as f:
         instructions = f.read()
 
-    agent = CodeAgent(tools=[], model=model, add_base_tools=True)
+    agent = CodeAgent(tools=[], model=model, add_base_tools=True, verbosity_level=50)
 
     return agent.run(f'{instructions}\n\n{user_query}')
 
