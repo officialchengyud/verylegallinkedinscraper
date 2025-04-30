@@ -194,7 +194,7 @@ class MainAgent:
                 }
 
         if self.current_step == WorkflowStep.DONE:
-            return
+            return {}
         
         # Prepare input data for the agent
         input_data = {
