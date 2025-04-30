@@ -50,7 +50,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        getUserInfo(currentUser);
+        const docRef = doc(db, "users", currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        setUserInfo(docSnap.data() as UserInfo);
       }
 
       setUser(currentUser);
@@ -59,18 +61,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => unsubscribe();
   }, []);
-
-  const getUserInfo = async (user: User) => {
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
-    setUserInfo(docSnap.data() as UserInfo);
-  };
-
-  useEffect(() => {
-    if (user) {
-      getUserInfo(user);
-    }
-  }, [user]);
 
   const login = async (
     email: string,
