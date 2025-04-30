@@ -4,6 +4,7 @@ import React, {
   useState,
   ReactNode,
   useEffect,
+  useRef,
 } from "react";
 import {
   Timestamp,
@@ -14,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../main";
 import { useAuth } from "./AuthContext";
+import { io, Socket } from "socket.io-client";
 
 interface ChatMessage {
   role: string;
@@ -24,7 +26,7 @@ interface ChatMessage {
 interface ChatContextType {
   chatLog: ChatMessage[];
   getChat: () => void;
-  sendChat: (message: string) => Promise<void>;
+  sendChat: (message: string, agent?: boolean) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -34,8 +36,14 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, userInfo } = useAuth();
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const getChat = async () => {
     if (user) {
@@ -46,26 +54,64 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     }
   };
 
+  const sendChat = (message: string, agent?: boolean) => {
+    if (userRef.current?.uid) {
+      const newMessage = {
+        role: agent ? "agent" : "user",
+        message: agent ? JSON.stringify(message) : message,
+        timestamp: Timestamp.now(),
+      };
+      const docRef = doc(db, "chats", userRef.current?.uid);
+      updateDoc(docRef, {
+        messages: arrayUnion(newMessage),
+      });
+      setChatLog((chats) => [...chats, newMessage]);
+
+      if (message === "start") {
+        socket?.emit("initialize_agent", userInfo);
+      } else {
+        socket?.emit("user_input", { text: message, approved: false });
+      }
+    }
+  };
+
+  useEffect(() => {
+    const newSocket = io("http://localhost:5000");
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      console.log("Connected to server");
+    });
+
+    newSocket.on("agent_initialized", () => {
+      sendChat("We have recieved your information. You may continue.", true);
+      console.log("Agent initialized");
+    });
+
+    newSocket.on("agent_output", (message) => {
+      sendChat(message.data, true);
+      console.log("Received from server:", message.data);
+    });
+
+    newSocket.on("error", (message) => {
+      console.log("error:", message.data);
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("Disconnected from server");
+    });
+
+    // Clean up the socket connection when the component unmounts
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     if (user) {
       getChat();
     }
   }, [user]);
-
-  const sendChat = async (message: string) => {
-    if (user) {
-      const newMessage = {
-        role: "user",
-        message,
-        timestamp: Timestamp.now(),
-      };
-      const docRef = doc(db, "chats", user.uid);
-      await updateDoc(docRef, {
-        messages: arrayUnion(newMessage),
-      });
-      setChatLog((chats) => [...chats, newMessage]);
-    }
-  };
 
   return (
     <ChatContext.Provider value={{ chatLog, getChat, sendChat }}>

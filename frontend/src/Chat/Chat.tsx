@@ -35,23 +35,25 @@ const Chat = () => {
           background: "#f9fafb",
         }}
       >
-        {chatLog.map((msg, index) => (
-          <Box
-            key={index}
-            style={{
-              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-              background: msg.role === "user" ? "#4f46e5" : "#e5e7eb",
-              color: msg.role === "user" ? "white" : "black",
-              padding: "10px 15px",
-              borderRadius: "20px",
-              marginBottom: "10px",
-              maxWidth: "70%",
-              wordBreak: "break-word",
-            }}
-          >
-            <Text>{msg.message}</Text>
-          </Box>
-        ))}
+        {chatLog.map((msg, index) => {
+          return (
+            <Box
+              key={index}
+              style={{
+                alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                background: msg.role === "user" ? "#4f46e5" : "#e5e7eb",
+                color: msg.role === "user" ? "white" : "black",
+                padding: "10px 15px",
+                borderRadius: "20px",
+                marginBottom: "10px",
+                maxWidth: "70%",
+                wordBreak: "break-word",
+              }}
+            >
+              <Text>{msg.message}</Text>
+            </Box>
+          );
+        })}
         <div ref={bottomRef} />
       </Flex>
       <Flex
