@@ -23,7 +23,7 @@ def contact_finder_tool(user_query):
 
     agent = CodeAgent(tools=[], model=model, add_base_tools=True)
 
-    agent.run(f'{instructions}\n\n{user_query}')
+    return agent.run(f'{instructions}\n\n{user_query}')
 
 # if __name__ == "__main__":
 #     user_query = "Find me a list of contacts for the company 'OpenAI' in the USA."

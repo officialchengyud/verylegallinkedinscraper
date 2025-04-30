@@ -52,6 +52,7 @@ class MainAgent:
         
         self.agent = Agent(
             model=agent_llm,
+            use_json_mode=True,
             tools=[
                 self.contact_finder_tool,
                 # self.linkedin_scraper_tool,
@@ -107,7 +108,6 @@ class MainAgent:
                 "- Use the user_data and companies list (if any) in state"
                 "- The user_input field, if present, contains the user's feedback regarding the current list of companies"
                 "- Use contact_finder_tool to gather information on relevant companies",
-                # "- Use organize_information_tool to structure the company data",
                 "- Using the structured data, return a list of companies to contact"
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - companies: A list of companies, each with the following fields:",
@@ -118,7 +118,6 @@ class MainAgent:
                 "- Use the user_data, the companies list, the contacts list (if any) in state",
                 "- The user_input field, if present, contains the user's feedback regarding the current list of contacts",
                 "- Use contact_finder_tool to find contacts from the list of companies",
-                # "- Use organize_information_tool to structure the contact data",
                 "- Using the structured data, return a list of companies to contact"
                 "- Step-Specific Output Format: A JSON object with the following fields:",
                 "  - contacts: A list of contacts, each with the following fields:",
@@ -126,6 +125,7 @@ class MainAgent:
                 "    - email: The email of the contact",
                 "    - company: The company the contact works at",
                 "    - reason: The reason why the contact could be a potential lead",
+                "    - linkedin: The contact's LinkedIn profile URL",
                 
                 "Step 4: Generate Emails (EMAIL_GENERATION)",
                 "- Use the user_data, current_contact and current_email objects in state",
