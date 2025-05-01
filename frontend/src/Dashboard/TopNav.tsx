@@ -8,6 +8,7 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { useAuth } from "../Context/AuthContext";
+import { gapi } from "gapi-script";
 
 const TopNav = () => {
   const { userInfo, signOut } = useAuth();
@@ -51,7 +52,25 @@ const TopNav = () => {
           </Box>
         </DropdownMenu.Trigger>
         <DropdownMenu.Content variant="soft" color="indigo">
-          <DropdownMenu.Item color="red" onClick={() => signOut()}>
+          <DropdownMenu.Item
+            color="red"
+            onClick={() => {
+              signOut();
+              const authInstance = gapi.auth2.getAuthInstance();
+              if (authInstance) {
+                authInstance
+                  .signOut()
+                  .then(() => {
+                    console.log("User signed out.");
+                  })
+                  .catch((error: any) => {
+                    console.error("Sign-out failed", error);
+                  });
+              } else {
+                console.warn("Auth instance not found");
+              }
+            }}
+          >
             Sign Out
           </DropdownMenu.Item>
         </DropdownMenu.Content>
