@@ -48,19 +48,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
   useEffect(() => {
     userRef.current = user;
-    if (user) {
-      oauthSignIn();
-    }
   }, [user]);
-
-  const oauthSignIn = async () => {
-    const authInstance = gapi.auth2.getAuthInstance();
-    const isSignedIn = authInstance.isSignedIn.get();
-
-    if (!isSignedIn) {
-      await authInstance.signIn();
-    }
-  };
 
   useEffect(() => {
     const initClient = () => {
@@ -105,8 +93,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
           raw: rawEmail,
         },
       });
-
-      alert("Email sent successfully!");
     } catch (error) {
       console.error("Failed to send email:", error);
     }
