@@ -105,8 +105,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
           raw: rawEmail,
         },
       });
-
-      alert("Email sent successfully!");
     } catch (error) {
       console.error("Failed to send email:", error);
     }
