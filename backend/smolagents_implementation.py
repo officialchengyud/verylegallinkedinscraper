@@ -1,6 +1,8 @@
 import os
 from smolagents import OpenAIServerModel, CodeAgent
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def company_finder_tool(user_query):
     """Use this function to find companies from the internet.
@@ -18,7 +20,7 @@ def company_finder_tool(user_query):
         api_key=os.environ["OPENAI_API_KEY"],
     )
 
-    with open("company_prompt.txt", "r", encoding="utf-8") as f:
+    with open(os.path.join(SCRIPT_DIR, "company_prompt.txt"), "r", encoding="utf-8") as f:
         instructions = f.read()
 
     agent = CodeAgent(tools=[], model=model, add_base_tools=True)
@@ -41,7 +43,7 @@ def contact_finder_tool(company_list):
         api_key=os.environ["OPENAI_API_KEY"],
     )
 
-    with open("contact_prompt.txt", "r", encoding="utf-8") as f:
+    with open(os.path.join(SCRIPT_DIR, "contact_prompt.txt"), "r", encoding="utf-8") as f:
         instructions = f.read()
 
     agent = CodeAgent(tools=[], model=model, add_base_tools=True)
