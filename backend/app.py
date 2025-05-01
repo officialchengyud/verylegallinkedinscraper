@@ -6,9 +6,8 @@ from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
 # from flask_cors import CORS
 from agno.agent import Agent
-from agno.models.google import Gemini
 from agno.models.openai import OpenAIChat
-from smolagents_test import contact_finder_tool
+from smolagents_implementation import contact_finder_tool
 
 # Load environment variables
 load_dotenv()
