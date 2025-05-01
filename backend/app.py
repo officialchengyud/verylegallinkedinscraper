@@ -7,7 +7,7 @@ from flask_socketio import SocketIO, emit
 # from flask_cors import CORS
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from smolagents_implementation import contact_finder_tool
+from smolagents_implementation import contact_finder_tool, company_finder_tool
 
 # Load environment variables
 load_dotenv()
@@ -30,7 +30,7 @@ class WorkflowStep(Enum):
 class MainAgent:
     def __init__(self, basic_info):
         # Initialize OpenAI model through Agno
-        agent_llm = OpenAIChat(id='gpt-4o', api_key=os.getenv('OPENAI_API_KEY'))
+        agent_llm = OpenAIChat(id='gpt-4o', api_key=os.getenv('OPENAI_API_KEY'),temperature=0.9)
         
         
         # Initialize agent state
@@ -45,7 +45,7 @@ class MainAgent:
 
         # Tools
         self.contact_finder_tool = contact_finder_tool
-        
+        self.company_finder_tool = company_finder_tool
         # Define instructions as multi-line strings
         overview_instructions = """
     OVERVIEW:
@@ -54,8 +54,9 @@ class MainAgent:
     1. Execute workflow steps as described in the workflow.
     2. Respond conversationally to the user's queries.
 
-    You have access to 1 tool:
-    1. contact_finder_tool: Searches the internet for companies and contacts based on user input
+    You have access to 2 tools:
+    1. company_finder_tool: Searches the internet for companies based on the user's needs
+    2. contact_finder_tool: Searches the internet for contacts based on the provided list of companies and the user's needs
 
     Whenever you receive a user input, you will determine if the user input is requesting a workflow step to be executed, or if it is a conversational query.
     If the user input is a conversational query, generate a clear and concise answer, using information about the user state passed to you.
@@ -155,6 +156,7 @@ class MainAgent:
     2. step: The step that was executed, if any (CONTEXT_GENERATION, COMPANY_SEARCH, CONTACT_SEARCH, or EMAIL_GENERATION). If no step was executed, this should be None.
     3. data: The output from the agent, if any. This should be a JSON object with the relevant data for the step executed
     4. state: The updated state object, such as user_data, companies, contacts, current_email, and num_approved_emails.
+    Only return 1 JSON object string, avoid any duplication.
     """
 
         important_rules_instructions = """
@@ -184,16 +186,6 @@ class MainAgent:
             important_rules_instructions,
             ]
         )
-    
-    def linkedin_scraper_tool(self, query):
-        """Tool for searching LinkedIn"""
-        # Implementation of LinkedIn scraping
-        return {"status": "success", "data": "Scraped data"}
-    
-    def organize_information_tool(self, data):
-        """Tool for organizing scraped data"""
-        # Implementation of data organization
-        return {"status": "success", "data": "Organized data"}
     
     def send_email_tool(self, contact_data):
         """Tool for sending emails"""
