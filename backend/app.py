@@ -81,7 +81,7 @@ class MainAgent:
        - user_data: A dictionary containing user data from Step 1
        - companies: List of companies generated from Step 2
        - contacts: List of contacts generated from Step 3
-       - current_email: The most recently drafted email in Step 4
+       - current_email: The most recently drafted email in Step 4. If this value is updated, this MUST contain the subject and content fields
        - num_processed_emails: The index of the contact in the 'contacts' list for whom an email draft has just been generated (or is about to be generated). This effectively counts how many contacts have had an email drafted for them so far. Starts at 0.
     3. user_input: A string containing the user's most recent input (e.g., approval, rejection, modification request for the current email, or a request to proceed).
     """
@@ -112,7 +112,7 @@ class MainAgent:
     - Use contact_finder_tool to find contacts from the current list of companies
     - Using the structured data, and state['contacts'], generate a list of contacts to reach out to
     - Step-Specific Output Format (to be included in the 'text' field): Present the list of contacts clearly, including name, email, company, reason, and LinkedIn URL. For example: "I found the following contacts at the selected companies:\n- Name: [Name 1], Email: [Email 1], Company: [Company 1], Reason: [Reason 1], LinkedIn: [URL 1]\n- Name: [Name 2], Email: [Email 2], Company: [Company 2], Reason: [Reason 2], LinkedIn: [URL 2]\nShould I start drafting emails for them?"
-    - The state object should be updated with the updated contacts list (state['contacts']) separately
+    - The state object should be updated with the updated contacts list (state['contacts']) separately. Ensure that each contact in this list has an email field.
     - On user approval, go to the next step
 
     Step 4: Generate Emails (EMAIL_GENERATION)
@@ -267,16 +267,16 @@ def handle_user_input(data: dict):
         if "/sendemail" in user_text:
             print("Detected '/sendemail' command in user input.")
             emit('send_email', {
-                "email": agent.current_email,
-                "contact": agent.contacts[agent.num_processed_emails],
+                "email": agent.contacts[agent.num_processed_emails]["email"],
+                "subject": agent.current_email["subject"],
+                "content": agent.current_email["content"],
             })
-
         result = agent.handle_input(data)
         # Check if the result indicates an error from handle_input
         if isinstance(result, dict) and "error" in result:
              emit('error', {'message': result["error"], 'details': result.get("raw_response")})
         else:
-            emit('agent_output', result) # Emits JSON with 'text', 'step'
+            emit('agent_output', result["text"]) # Emits JSON with 'text', 'step'
     except Exception as e:
         # Catch any other unexpected errors during handling or emission
         print(f"Error in handle_user_input: {e}")

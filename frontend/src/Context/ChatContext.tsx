@@ -135,6 +135,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
   const sendChat = (message: string, agent?: boolean) => {
     if (userRef.current?.uid) {
+      console.log(message);
       const newMessage = {
         role: agent ? "agent" : "user",
         message: agent ? JSON.stringify(message) : message,
@@ -168,13 +169,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     });
 
     newSocket.on("agent_output", (message) => {
-      sendChat(message.data, true);
-      console.log("Received from server:", message.data);
+      sendChat(message, true);
+      console.log("Received from server:", JSON.stringify(message.data));
     });
 
     newSocket.on("send_email", (message) => {
-      sendEmail(message.data.email, message.data.subject, message.data.content);
-      console.log("Received from server:", message.data);
+      console.log("Send email:", message);
+      sendEmail(message.email, message.subject, message.content);
     });
 
     newSocket.on("error", (message) => {

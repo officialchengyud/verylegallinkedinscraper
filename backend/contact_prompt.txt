@@ -10,7 +10,7 @@ these profiles. If possible, try to find the email address and phone numbers of 
 at, the first name, and the last name of the candidate, so that if you could not explicity find their email, you should generate their email address using
 whatever the style the company usually follows. As a last backup, generate the email address using the default format of firstname.lastname@domain. 
 Try to find 2-3 contacts per company - only include high level leads. If you find 1 good lead and 1 decent lead, only return the good lead, 
-optimize for quality over quantity.
+optimize for quality over quantity. Only return the first three.
 
 # Example
 <user_query>
