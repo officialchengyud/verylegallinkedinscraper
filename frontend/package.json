@@ -12,6 +12,7 @@
   "dependencies": {
     "@radix-ui/themes": "^3.2.1",
     "firebase": "^11.6.1",
+    "gapi-script": "^1.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.1",

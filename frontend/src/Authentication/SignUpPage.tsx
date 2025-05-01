@@ -66,7 +66,7 @@ function SignUpPage() {
                     {
                       role: "agent",
                       message:
-                        "Welcome to Very Legal LinkedIn Scraper! Send a message to get started.",
+                        "Welcome to Very Legal LinkedIn Scraper! Send 'start' to get started.",
                       timestamp: Timestamp.now(),
                     },
                   ],

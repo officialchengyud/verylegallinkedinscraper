@@ -16,6 +16,11 @@ import {
 import { db } from "../main";
 import { useAuth } from "./AuthContext";
 import { io, Socket } from "socket.io-client";
+import { gapi } from "gapi-script";
+
+const CLIENT_ID =
+  "901374233553-08gidgm1omcqqrror03087d3qkpogjek.apps.googleusercontent.com";
+const SCOPES = "https://www.googleapis.com/auth/gmail.send";
 
 interface ChatMessage {
   role: string;
@@ -44,6 +49,82 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   useEffect(() => {
     userRef.current = user;
   }, [user]);
+
+  useEffect(() => {
+    const initClient = () => {
+      gapi.client
+        .init({
+          clientId: CLIENT_ID,
+          discoveryDocs: [
+            "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
+          ],
+          scope: SCOPES,
+        })
+        .then(() => {
+          console.log("GAPI client initialized");
+        })
+        .catch((error: any) =>
+          console.error("Error initializing GAPI client", error)
+        );
+    };
+
+    gapi.load("client:auth2", initClient);
+  }, []);
+
+  const sendEmail = async (email: string, subject: string, message: string) => {
+    try {
+      const authInstance = gapi.auth2.getAuthInstance();
+      const isSignedIn = authInstance.isSignedIn.get();
+
+      if (!isSignedIn) {
+        await authInstance.signIn();
+      }
+
+      const rawEmail = createEmail({
+        to: email,
+        from: "me",
+        subject: subject,
+        message,
+      });
+
+      await gapi.client.gmail.users.messages.send({
+        userId: "me",
+        resource: {
+          raw: rawEmail,
+        },
+      });
+
+      alert("Email sent successfully!");
+    } catch (error) {
+      console.error("Failed to send email:", error);
+    }
+  };
+
+  const createEmail = ({
+    to,
+    from,
+    subject,
+    message,
+  }: {
+    to: string;
+    from: string;
+    subject: string;
+    message: string;
+  }): string => {
+    const email = [
+      `To: ${to}`,
+      `From: ${from}`,
+      `Subject: ${subject}`,
+      "Content-Type: text/plain; charset=utf-8",
+      "",
+      message,
+    ].join("\n");
+
+    return btoa(unescape(encodeURIComponent(email)))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+  };
 
   const getChat = async () => {
     if (user) {
@@ -90,6 +171,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
     newSocket.on("agent_output", (message) => {
       sendChat(message.data, true);
+      console.log("Received from server:", message.data);
+    });
+
+    newSocket.on("send_email", (message) => {
+      sendEmail(message.data.email, message.data.subject, message.data.content);
       console.log("Received from server:", message.data);
     });
 
