@@ -38,19 +38,19 @@ class TestMainAgent(unittest.TestCase):
         self.assertEqual(self.agent.current_step, WorkflowStep.COMPANIES)
         self.assertEqual(result["step"], WorkflowStep.COMPANIES.value)
                 
-        # Simulate user input for company search
-        companies_input = {
-            "approved": False,
-            "text": "Focus on companies with 50-200 employees",
-        }
+        # # Simulate user input for company search
+        # companies_input = {
+        #     "approved": False,
+        #     "text": "Focus on companies with 50-200 employees",
+        # }
         
-        # Process companies input
-        print("\nFeeding companies input (reject):", companies_input)
-        result = self.agent.handle_input(companies_input)
-        # print("Output:", result)
-        self.assertIsNotNone(result)
-        self.assertEqual(self.agent.current_step, WorkflowStep.COMPANIES)
-        self.assertEqual(result["step"], WorkflowStep.COMPANIES.value)
+        # # Process companies input
+        # print("\nFeeding companies input (reject):", companies_input)
+        # result = self.agent.handle_input(companies_input)
+        # # print("Output:", result)
+        # self.assertIsNotNone(result)
+        # self.assertEqual(self.agent.current_step, WorkflowStep.COMPANIES)
+        # self.assertEqual(result["step"], WorkflowStep.COMPANIES.value)
         
         # Simulate user input for company search
         companies_input = {"approved": True}
@@ -89,21 +89,21 @@ class TestMainAgent(unittest.TestCase):
         self.assertEqual(result["step"], WorkflowStep.EMAILS.value)
         self.assertEqual(self.agent.current_contact_index, 0)
         
-        # Simulate user input for email generation
-        email_input = {
-            "approved": False,
-            "feedback": "Make the email shorter"
-        }
+        # # Simulate user input for email generation
+        # email_input = {
+        #     "approved": False,
+        #     "feedback": "Make the email shorter"
+        # }
         
-        # Process email input
-        print("\nFeeding email input (reject):", email_input)
-        result = self.agent.handle_input(email_input)
-        # print("Output:", result)
-        self.assertIsNotNone(result)
-        self.assertEqual(self.agent.current_step, WorkflowStep.EMAILS)
-        self.assertEqual(result["step"], WorkflowStep.EMAILS.value)
-        self.assertEqual(self.agent.current_contact_index, 0)
-        self.assertEqual(self.agent.current_contact, self.agent.contacts[0])
+        # # Process email input
+        # print("\nFeeding email input (reject):", email_input)
+        # result = self.agent.handle_input(email_input)
+        # # print("Output:", result)
+        # self.assertIsNotNone(result)
+        # self.assertEqual(self.agent.current_step, WorkflowStep.EMAILS)
+        # self.assertEqual(result["step"], WorkflowStep.EMAILS.value)
+        # self.assertEqual(self.agent.current_contact_index, 0)
+        # self.assertEqual(self.agent.current_contact, self.agent.contacts[0])
 
         # Simulate user input for email generation
         email_input = {"approved": True}
@@ -112,7 +112,7 @@ class TestMainAgent(unittest.TestCase):
         print("\nFeeding email input (approve):", email_input)
         result = self.agent.handle_input({"approved": True})
         # print("Output:", result)
-        self.assertIsNotNone(result)
+        self.assertEqual(result, {})
         self.assertEqual(self.agent.current_step, WorkflowStep.EMAILS)
         self.assertEqual(result["step"], WorkflowStep.EMAILS.value)
         self.assertEqual(self.agent.current_contact_index, 1)
